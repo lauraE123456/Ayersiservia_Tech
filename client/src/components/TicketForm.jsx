@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -8,20 +8,20 @@ import {
   Paper,
   Alert,
   CircularProgress,
-  Container
-} from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs from 'dayjs';
-import axios from 'axios';
+  Container,
+} from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import axios from "axios";
 
 const TicketForm = () => {
   const [formData, setFormData] = useState({
-    text: '',
-    client_id: '',
+    text: "",
+    client_id: "",
     date: dayjs(),
-    software_type: 'ERP'
+    software_type: "ERP",
   });
 
   const [errors, setErrors] = useState({});
@@ -33,7 +33,7 @@ const TicketForm = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     // Clear error when user types
     if (errors[name]) {
@@ -44,14 +44,16 @@ const TicketForm = () => {
   const handleDateChange = (newDate) => {
     setFormData((prev) => ({
       ...prev,
-      date: newDate
+      date: newDate,
     }));
   };
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.text.trim()) newErrors.text = 'La descripción del problema es obligatoria';
-    if (!formData.client_id.trim()) newErrors.client_id = 'El ID del cliente es obligatorio';
+    if (!formData.text.trim())
+      newErrors.text = "La descripción del problema es obligatoria";
+    if (!formData.client_id.trim())
+      newErrors.client_id = "El ID del cliente es obligatorio";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -67,15 +69,20 @@ const TicketForm = () => {
 
     const payload = {
       ...formData,
-      date: formData.date ? formData.date.format('YYYY-MM-DD') : ''
+      date: formData.date ? formData.date.format("YYYY-MM-DD") : "",
     };
 
     try {
-      const response = await axios.post('http://localhost:5000/process_ticket', payload);
+      const response = await axios.post(
+        "http://localhost:5000/process_ticket",
+        payload
+      );
       setResult(response.data);
     } catch (err) {
-      console.error('Error processing ticket:', err);
-      setApiError('Error al procesar el ticket. Verifique que el servidor esté activo.');
+      console.error("Error processing ticket:", err);
+      setApiError(
+        "Error al procesar el ticket. Verifique que el servidor esté activo."
+      );
     } finally {
       setLoading(false);
     }
@@ -84,23 +91,31 @@ const TicketForm = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Container maxWidth="md">
-        <Paper 
-          elevation={3} 
-          sx={{ 
-            p: 4, 
-            mt: 4, 
+        <Paper
+          elevation={3}
+          sx={{
+            p: 4,
+            mt: 4,
             borderRadius: 2,
-            background: 'background.paper' 
-          }}
-        >
-          <Typography variant="h4" component="h2" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
+            background: "background.paper",
+          }}>
+          <Typography
+            variant="h4"
+            component="h2"
+            gutterBottom
+            sx={{ fontWeight: 600, color: "primary.main" }}>
             Nuevo Ticket de Soporte
           </Typography>
           <Typography variant="body1" color="text.secondary" paragraph>
-            Complete el formulario para registrar una incidencia en el hackathon.
+            Complete el formulario para registrar una incidencia en el
+            hackathon.
           </Typography>
 
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 2 }}>
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            noValidate
+            sx={{ mt: 2 }}>
             <TextField
               fullWidth
               label="ID del Cliente"
@@ -129,7 +144,13 @@ const TicketForm = () => {
               required
             />
 
-            <Box sx={{ display: 'flex', gap: 2, mt: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                mt: 2,
+                flexDirection: { xs: "column", sm: "row" },
+              }}>
               <DatePicker
                 label="Fecha del Incidente"
                 value={formData.date}
@@ -143,23 +164,34 @@ const TicketForm = () => {
                 label="Tipo de Software"
                 name="software_type"
                 value={formData.software_type}
-                onChange={handleChange}
-              >
-                <MenuItem value="ERP">ERP</MenuItem>
-                <MenuItem value="CRM">CRM</MenuItem>
-                <MenuItem value="Otro">Otro</MenuItem>
+                onChange={handleChange}>
+                {[
+                  "Phishing",
+                  "Correo sospechoso",
+                  "Acceso no autorizado",
+                  "Malware",
+                  "ERP",
+                  "CRM",
+                  "Red",
+                  "Otro",
+                ].map((opt) => (
+                  <MenuItem key={opt} value={opt}>
+                    {opt}
+                  </MenuItem>
+                ))}
               </TextField>
             </Box>
 
-            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
+            <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end" }}>
               <Button
                 type="submit"
                 variant="contained"
                 size="large"
                 disabled={loading}
-                startIcon={loading && <CircularProgress size={20} color="inherit" />}
-              >
-                {loading ? 'Procesando...' : 'Procesar Ticket'}
+                startIcon={
+                  loading && <CircularProgress size={20} color="inherit" />
+                }>
+                {loading ? "Procesando..." : "Procesar Ticket"}
               </Button>
             </Box>
           </Box>
@@ -175,16 +207,15 @@ const TicketForm = () => {
               <Typography variant="h6" gutterBottom color="success.main">
                 Ticket Procesado Exitosamente
               </Typography>
-              <Paper 
-                variant="outlined" 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: 'grey.900', 
-                  color: 'common.white',
-                  overflowX: 'auto'
-                }}
-              >
-                <pre style={{ margin: 0, fontFamily: 'Fira Code, monospace' }}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  bgcolor: "grey.900",
+                  color: "common.white",
+                  overflowX: "auto",
+                }}>
+                <pre style={{ margin: 0, fontFamily: "Fira Code, monospace" }}>
                   {JSON.stringify(result, null, 2)}
                 </pre>
               </Paper>
