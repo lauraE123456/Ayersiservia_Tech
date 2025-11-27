@@ -28,3 +28,5 @@ instalar librerias con:
 - pip install -r requirements.txt
 
 FINALMENTE 1 COMANDO PARA CORRER AMBOS PUERTOS
+sin ingresar a client y server
+pnpm dev
