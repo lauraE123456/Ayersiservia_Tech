@@ -1,0 +1,21 @@
+text,label,risk_level
+"haz clic aquí para actualizar tu contraseña",phishing_link,Alto
+"su cuenta será suspendida si no verifica su identidad",phishing_amenaza,Alto
+"http://fakebank-login.com ingrese sus datos",phishing_url,Alto
+"soporte bancolombia urgente restablezca su password",phishing_banco,Alto
+"tienes un malware en tu equipo descarga esta herramienta",malware,Alto
+"envis tu contraseña por correo para validación",phishing_credenciales,Alto
+"felicidades ganaste un iphone reclama aquí",phishing_premio,Alto
+"urgente paga tu factura vencida en este link desconocido",phishing_finance,Alto
+"detectamos actividad inusual entra ya",phishing_amenaza,Alto
+"te envio el comprobante de pago.exe",malware_archivo,Alto
+"quiero soporte del CRM",crm_support,Bajo
+"error en el ERP al generar el documento",erp_support,Bajo
+"no puedo acceder al sistema de red",network_issue,Bajo
+"necesito actualizar un campo en el ERP",erp_request,Bajo
+"problema con la facturación del cliente",billing_issue,Bajo
+"hola olvidé mi contraseña necesito resetearla",password_reset,Bajo
+"la impresora no conecta con el servidor",hardware_issue,Bajo
+"solicito licencia para el software de diseño",software_request,Bajo
+"el sistema está muy lento hoy",performance_issue,Bajo
+"quisiera agendar una capacitación",training_request,Bajo
