@@ -1,0 +1,14 @@
+{
+  "name": "arepa-tech",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"pnpm run client\" \"pnpm run server\"",
+    "client": "cd client && pnpm dev",
+    "server": "cd server && \"D:/INFORMACION/Documents/TALENTO-TECH/Arepa_Tech/server/venv/Scripts/python.exe\" app.py"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
