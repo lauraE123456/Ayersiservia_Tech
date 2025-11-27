@@ -1,0 +1,91 @@
+/* client/src/styles/vortex-theme.css */
+
+:root {
+  /* Colores Primarios */
+  --vortex-primary: #0066CC;
+  --vortex-primary-dark: #004C99;
+  --vortex-primary-light: #3399FF;
+  --vortex-primary-rgb: 0, 102, 204;
+
+  /* Colores Secundarios */
+  --vortex-accent: #00A8E8;
+  --vortex-accent-light: #33BFEF;
+  
+  /* Grises */
+  --vortex-gray-900: #1A1A1A;
+  --vortex-gray-800: #2C3E50;
+  --vortex-gray-700: #495057;
+  --vortex-gray-600: #6C757D;
+  --vortex-gray-500: #7F8C8D;
+  --vortex-gray-400: #ADB5BD;
+  --vortex-gray-300: #DEE2E6;
+  --vortex-gray-200: #E9ECEF;
+  --vortex-gray-100: #F8F9FA;
+
+  /* Estados */
+  --vortex-success: #28A745;
+  --vortex-warning: #FFC107;
+  --vortex-danger: #DC3545;
+  --vortex-info: #17A2B8;
+
+  /* Tipografía */
+  --font-heading: 'Poppins', -apple-system, sans-serif;
+  --font-body: 'Inter', 'Roboto', sans-serif;
+  --font-mono: 'Fira Code', monospace;
+
+  /* Tamaños de Fuente */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-base: 1rem;     /* 16px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  --text-3xl: 1.875rem;  /* 30px */
+  --text-4xl: 2.25rem;   /* 36px */
+  --text-5xl: 3rem;      /* 48px */
+
+  /* Sombras */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+
+  /* Bordes */
+  --radius-sm: 0.25rem;  /* 4px */
+  --radius-md: 0.5rem;   /* 8px */
+  --radius-lg: 0.75rem;  /* 12px */
+  --radius-xl: 1rem;     /* 16px */
+  --radius-2xl: 1.5rem;  /* 24px */
+  --radius-full: 9999px;
+
+  /* Espaciado */
+  --spacing-xs: 0.25rem;  /* 4px */
+  --spacing-sm: 0.5rem;   /* 8px */
+  --spacing-md: 1rem;     /* 16px */
+  --spacing-lg: 1.5rem;   /* 24px */
+  --spacing-xl: 2rem;     /* 32px */
+  --spacing-2xl: 3rem;    /* 48px */
+}
+
+/* Tema Oscuro */
+[data-theme="dark"] {
+  --vortex-bg-primary: #1A1A1A;
+  --vortex-bg-secondary: #2C3E50;
+  --vortex-text-primary: #FFFFFF;
+  --vortex-text-secondary: #ADB5BD;
+}
+
+/* Tema Claro (Default) */
+[data-theme="light"] {
+  --vortex-bg-primary: #FFFFFF;
+  --vortex-bg-secondary: #F8F9FA;
+  --vortex-text-primary: #2C3E50;
+  --vortex-text-secondary: #6C757D;
+}
+
+body {
+  background-color: var(--vortex-bg-primary);
+  color: var(--vortex-text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: var(--font-body);
+}
