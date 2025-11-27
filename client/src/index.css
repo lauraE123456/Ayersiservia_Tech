@@ -1,0 +1,35 @@
+:root {
+  /* Colores Primarios */
+  --vortex-primary: #0066cc;
+  --vortex-primary-dark: #004c99;
+  --vortex-primary-light: #3399ff;
+  --vortex-primary-rgb: 0, 102, 204;
+
+  /* Colores Secundarios */
+  --vortex-accent: #00a8e8;
+  --vortex-accent-light: #33bfef;
+
+  /* Grises */
+  --vortex-gray-900: #1a1a1a;
+  --vortex-gray-800: #2c3e50;
+  --vortex-gray-700: #495057;
+  --vortex-gray-600: #6c757d;
+  --vortex-gray-500: #7f8c8d;
+  --vortex-gray-400: #adb5bd;
+  --vortex-gray-300: #dee2e6;
+  --vortex-gray-200: #e9ecef;
+  --vortex-gray-100: #f8f9fa;
+
+  /* Estados */
+  --vortex-success: #28a745;
+  --vortex-warning: #ffc107;
+  --vortex-danger: #dc3545;
+  --vortex-info: #17a2b8;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, Avenir, Helvetica, Arial, sans-serif;
+  background-color: var(--vortex-gray-100);
+  color: var(--vortex-gray-900);
+}

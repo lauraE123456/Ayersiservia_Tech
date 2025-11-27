@@ -1,12 +1,13 @@
 {
-  "name": "arepa-tech",
+  "name": "ayersiservia_tech",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"pnpm run client\" \"pnpm run server\"",
+    "dev": "concurrently \"pnpm run client\" \"pnpm run server\" \"pnpm run gmail_listener\"",
     "client": "cd client && pnpm dev",
-    "server": "cd server && \"D:/INFORMACION/Documents/TALENTO-TECH/Arepa_Tech/server/venv/Scripts/python.exe\" app.py"
+    "server": "cd server && D:/INFORMACION/Documents/TALENTO-TECH/Ayersiservia_Tech/server/.venv/Scripts/python.exe app.py",
+    "gmail_listener": "cd server && D:/INFORMACION/Documents/TALENTO-TECH/Ayersiservia_Tech/server/.venv/Scripts/python.exe gmail_listener.py"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

@@ -80,9 +80,14 @@ const TicketForm = () => {
       setResult(response.data);
     } catch (err) {
       console.error("Error processing ticket:", err);
-      setApiError(
-        "Error al procesar el ticket. Verifique que el servidor esté activo."
-      );
+      if (err.response && err.response.status === 400) {
+        // Error de seguridad o validación
+        setApiError(err.response.data.error || "Error de validación");
+      } else {
+        setApiError(
+          "Error al procesar el ticket. Verifique que el servidor esté activo."
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -100,12 +105,13 @@ const TicketForm = () => {
             mt: 4,
             borderRadius: 2,
             background: "background.paper",
+            borderTop: "4px solid var(--vortex-primary)",
           }}>
           <Typography
             variant="h4"
             component="h2"
             gutterBottom
-            sx={{ fontWeight: 600, color: "primary.main" }}>
+            sx={{ fontWeight: 600, color: "var(--vortex-primary)" }}>
             Nuevo Ticket de Soporte
           </Typography>
           <Typography variant="body1" color="text.secondary" paragraph>
@@ -190,6 +196,10 @@ const TicketForm = () => {
                 variant="contained"
                 size="large"
                 disabled={loading}
+                sx={{
+                  bgcolor: "var(--vortex-primary)",
+                  "&:hover": { bgcolor: "var(--vortex-primary-dark)" },
+                }}
                 startIcon={
                   loading && <CircularProgress size={20} color="inherit" />
                 }>
@@ -198,24 +208,36 @@ const TicketForm = () => {
             </Box>
           </Box>
 
+          {/* ALERTA DE SEGURIDAD (MODAL/ALERT) */}
           {apiError && (
-            <Alert severity="error" sx={{ mt: 3 }}>
+            <Alert
+              severity="error"
+              variant="filled"
+              sx={{
+                mt: 3,
+                bgcolor: "var(--vortex-danger)",
+                fontWeight: "bold",
+              }}>
+              <Typography variant="subtitle1" component="div">
+                🚫 BLOQUEO DE SEGURIDAD
+              </Typography>
               {apiError}
             </Alert>
           )}
 
           {result && (
             <Box sx={{ mt: 4 }}>
-              <Typography variant="h6" gutterBottom color="success.main">
-                Ticket Procesado Exitosamente
-              </Typography>
+              <Alert severity="success" sx={{ mb: 2 }}>
+                Ticket procesado correctamente
+              </Alert>
               <Paper
                 variant="outlined"
                 sx={{
                   p: 2,
-                  bgcolor: "grey.900",
+                  bgcolor: "var(--vortex-gray-900)",
                   color: "common.white",
                   overflowX: "auto",
+                  border: "1px solid var(--vortex-success)",
                 }}>
                 <pre style={{ margin: 0, fontFamily: "Fira Code, monospace" }}>
                   {JSON.stringify(result, null, 2)}
