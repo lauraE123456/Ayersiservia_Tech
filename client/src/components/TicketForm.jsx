@@ -74,7 +74,7 @@ const TicketForm = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/process_ticket",
+        "http://localhost:5000/api/process_ticket",
         payload
       );
       setResult(response.data);
@@ -86,6 +86,8 @@ const TicketForm = () => {
     } finally {
       setLoading(false);
     }
+    console.log(result);
+    console.log(payload);
   };
 
   return (
