@@ -98,13 +98,13 @@ def process_ticket_controller():
         "text_processed": text_anon,
         "classification": clasificacion,
         "churn_score": churn_score,
-        "churn_level": churn_level, # Nuevo campo
         "churn_color": churn_color, # Nuevo campo
         "insight": final_recommendation,
         "source": source,
         "status": "Success",
         "project": project_name, # Contexto extra
-        "urgency": "Alta" if churn_score > 60 else "Baja", # Campo derivado para UI
+        "real_antiguedad": real_antiguedad,
+        "urgency": churn_level, # Campo derivado para UI
         "phishing_prob":phishing_prob
     }
     
