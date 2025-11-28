@@ -18,7 +18,8 @@ def process_ticket_controller():
     source = data.get("source", "Web")
 
     # 2. VALIDACIÓN BÁSICA
-    if not text:
+    if not text and not body:
+        print("Solicitud incompleta: falta 'text' o 'body'")
         return jsonify({"error": "Solicitud incompleta"}), 400
 
     # 3. RECUPERAR CONTEXTO DEL CLIENTE
@@ -31,7 +32,10 @@ def process_ticket_controller():
     # ---------------------------------------------------------
     
     # A. Enmascarar datos sensibles (PII) - ANTES de la IA
-    text_anon = body or text
+    text_anon = (body or text) or ""
+
+    
+    
     # 1. Normalizar Links (Crucial para la IA)
     # Convertimos cualquier URL en la palabra "[LINK]". La IA aprenderá que "[LINK]" es sospechoso en ciertos contextos.
     text_anon = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', "[LINK]", text_anon)
@@ -42,10 +46,10 @@ def process_ticket_controller():
     # Patrón robusto para passwords
     pattern_creds = r"(?i)\b(password|contraseña|contrasena|clave|pass|pin)\b\s*(?:es|is|:|de|en|acc|access)?\s*(\S+)"
     text_anon = re.sub(pattern_creds, r"\1 [REDACTED]", text_anon)
-
-    link_count = len(re.findall(r'http[s]?://', body))
-    sensitive_match = re.search(pattern_creds, body)
+    link_count = len(re.findall(r'http[s]?://', text_anon))
+    sensitive_match = re.search(pattern_creds, text_anon)
     sensitive_found = True if sensitive_match else False
+    
 
     # PASO C: Inferencia (La IA piensa)
     # Le pasamos el texto limpio + los metadatos que extrajimos al principio
@@ -57,7 +61,7 @@ def process_ticket_controller():
     # B. Detección de Phishing con "IA"
     # Se usa el texto anonimizado (aunque el phishing suele estar en el texto original, 
     # la anonimización protege datos reales si se enviaran a una API externa)
-    phishing_prob = detect_phishing_advanced(text,metadata) # Usamos original para detectar patrones exactos de phishing
+    phishing_prob = detect_phishing_advanced(text_anon,metadata) # Usamos original para detectar patrones exactos de phishing
     
     if phishing_prob > 0.5:
         # Log interno detallado

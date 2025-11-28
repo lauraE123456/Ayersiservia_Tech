@@ -2,7 +2,7 @@ import numpy as np
 import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neural_network import MLPClassifier
-
+from services.satinitize_sensitive_services import sanitize_sensitive_data
 # Lista básica de palabras vacías en español para limpiar el ruido
 SPANISH_STOP_WORDS = [
     'de', 'la', 'que', 'el', 'en', 'y', 'a', 'los', 'del', 'se', 'las', 
@@ -70,6 +70,7 @@ def detect_phishing_advanced(clean_text, metadata):
     Combina la IA entrenada en español con reglas lógicas.
     """
     # 1. Análisis Semántico (¿Qué parece decir el texto?)
+    clean_text=sanitize_sensitive_data(clean_text)
     nn_score = brain.get_neural_score(clean_text)
     
     # 2. Variables de contexto
