@@ -2,12 +2,14 @@ from flask import request, jsonify, current_app
 import re
 import datetime
 from data.client_db import get_client_by_id
-from services.ai_service import detect_phishing, predict_churn, generate_insight
+from services.ai_service import predict_churn, generate_insight
+from services.detect_phishing_service import detect_phishing_advanced
 
 def process_ticket_controller():
     # 1. Recibir datos del Request
     data = request.get_json()
     text = data.get("text", "")
+    head = data.get("head","")
     body = data.get("body","")
     client_id = data.get("client_id", "UNKNOWN")
     client_name = data.get("client_name","UNKNOWN")
@@ -29,7 +31,10 @@ def process_ticket_controller():
     # ---------------------------------------------------------
     
     # A. Enmascarar datos sensibles (PII) - ANTES de la IA
-    text_anon = body
+    text_anon = body or text
+    # 1. Normalizar Links (Crucial para la IA)
+    # Convertimos cualquier URL en la palabra "[LINK]". La IA aprenderá que "[LINK]" es sospechoso en ciertos contextos.
+    text_anon = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', "[LINK]", text_anon)
     # Emails
     text_anon = re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "[EMAIL]", text_anon)
     # Teléfonos
@@ -38,10 +43,21 @@ def process_ticket_controller():
     pattern_creds = r"(?i)\b(password|contraseña|contrasena|clave|pass|pin)\b\s*(?:es|is|:|de|en|acc|access)?\s*(\S+)"
     text_anon = re.sub(pattern_creds, r"\1 [REDACTED]", text_anon)
 
+    link_count = len(re.findall(r'http[s]?://', body))
+    sensitive_match = re.search(pattern_creds, body)
+    sensitive_found = True if sensitive_match else False
+
+    # PASO C: Inferencia (La IA piensa)
+    # Le pasamos el texto limpio + los metadatos que extrajimos al principio
+    metadata = {
+        "links_count": link_count,
+        "sensitive_found": sensitive_found
+    }
+
     # B. Detección de Phishing con "IA"
     # Se usa el texto anonimizado (aunque el phishing suele estar en el texto original, 
     # la anonimización protege datos reales si se enviaran a una API externa)
-    phishing_prob = detect_phishing(text_anon) # Usamos original para detectar patrones exactos de phishing
+    phishing_prob = detect_phishing_advanced(text,metadata) # Usamos original para detectar patrones exactos de phishing
     
     if phishing_prob > 0.5:
         # Log interno detallado
@@ -54,6 +70,8 @@ def process_ticket_controller():
             "code": "SECURITY_BLOCK",
             "detail": "Solicitud rechazada por políticas de seguridad."
         }), 400
+
+    
 
     # ---------------------------------------------------------
     # ETAPA DE NEGOCIO (Usando el Contexto)
@@ -86,7 +104,8 @@ def process_ticket_controller():
         "source": source,
         "status": "Success",
         "project": project_name, # Contexto extra
-        "urgency": "Alta" if churn_score > 60 else "Baja" # Campo derivado para UI
+        "urgency": "Alta" if churn_score > 60 else "Baja", # Campo derivado para UI
+        "phishing_prob":phishing_prob
     }
     
     current_app.tickets_store.append(response)

@@ -70,7 +70,7 @@ def listen_gmail():
                             client_email = client_email.strip().replace("<", "").replace(">", "")
                             # Enviar a la API
                             payload = {
-                                "text": f"{subject}",
+                                "head": f"{subject}",
                                 "body": f"{body}",
                                 "client_id": client_email, # Usamos el remitente como ID
                                 "client_name":client_name,

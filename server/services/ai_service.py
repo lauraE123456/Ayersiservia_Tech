@@ -1,37 +1,6 @@
 import random
 import re
 
-# Simulación de "Red Neuronal" y Lógica de Negocio Avanzada
-
-def detect_phishing(text):
-    """
-    Simula una red neuronal de detección de phishing.
-    Retorna una probabilidad entre 0.0 y 1.0.
-    """
-    text_lower = text.lower()
-    
-    # Patrones que "activan" las neuronas de riesgo
-    risk_patterns = [
-        r"password", r"contraseña", r"clave", 
-        r"click aqu[íi]", r"haz clic", r"verify", 
-        r"banco", r"cuenta bloqueada", r"urgente",
-        r"ganaste", r"premio", r"oferta", r"bitcoin"
-    ]
-    
-    hits = sum(1 for p in risk_patterns if re.search(p, text_lower))
-    
-    # Función de activación sigmoide simulada
-    # Si hay 0 hits -> probabilidad baja (0.01 - 0.1)
-    # Si hay 1 hit -> probabilidad media (0.4 - 0.6)
-    # Si hay 2+ hits -> probabilidad alta (0.8 - 0.99)
-    
-    if hits == 0:
-        return random.uniform(0.01, 0.1)
-    elif hits == 1:
-        return random.uniform(0.4, 0.6)
-    else:
-        return random.uniform(0.8, 0.99)
-
 def predict_churn(text, antiquity):
     """
     Calcula el riesgo de Churn basado en sentimiento (texto) y antigüedad.
