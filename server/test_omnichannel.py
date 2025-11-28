@@ -3,7 +3,7 @@ import time
 import sys
 
 def test_omnichannel():
-    url_process = "http://localhost:5000/api/process_ticket"
+    url_process = "http://localhost:5000/api/ticket"
     url_dashboard = "http://localhost:5000/api/tickets"
     
     print("--- INICIANDO PRUEBAS OMNICANAL ---")
