@@ -99,12 +99,21 @@ const Dashboard = () => {
     );
   }
   console.log(tickets);
+
+  const colorMap = {
+    Bajo: "success", // verde
+    Medio: "warning", // amarillo
+    Alto: "warning", // naranja no existe, warning es lo más cercano
+    "Muy Alto": "error", // rojo
+    Crítico: "error", // rojo fuerte
+  };
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
         <Typography
           variant="h4"
-          sx={{ fontWeight: "bold", color: "var(--vortex-primary)" }}>
+          sx={{ fontWeight: "bold", color: "var(--vortex-primary)" }}
+        >
           Dashboard de Control
         </Typography>
         <IconButton onClick={fetchTickets} color="primary">
@@ -117,7 +126,8 @@ const Dashboard = () => {
         <Grid item xs={12} md={4}>
           <Card
             elevation={3}
-            sx={{ borderLeft: "5px solid var(--vortex-info)" }}>
+            sx={{ borderLeft: "5px solid var(--vortex-info)" }}
+          >
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                 <WebIcon color="info" sx={{ mr: 1 }} />
@@ -130,7 +140,8 @@ const Dashboard = () => {
         <Grid item xs={12} md={4}>
           <Card
             elevation={3}
-            sx={{ borderLeft: "5px solid var(--vortex-danger)" }}>
+            sx={{ borderLeft: "5px solid var(--vortex-danger)" }}
+          >
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                 <TrendingDownIcon color="error" sx={{ mr: 1 }} />
@@ -145,7 +156,8 @@ const Dashboard = () => {
         <Grid item xs={12} md={4}>
           <Card
             elevation={3}
-            sx={{ borderLeft: "5px solid var(--vortex-warning)" }}>
+            sx={{ borderLeft: "5px solid var(--vortex-warning)" }}
+          >
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                 <SecurityIcon color="warning" sx={{ mr: 1 }} />
@@ -182,7 +194,8 @@ const Dashboard = () => {
                   key={ticket.id}
                   hover
                   sx={{ cursor: "pointer" }}
-                  onClick={() => setSelectedTicket(ticket)}>
+                  onClick={() => setSelectedTicket(ticket)}
+                >
                   <TableCell>
                     {ticket.source === "Email" ? (
                       <EmailIcon color="action" />
@@ -222,9 +235,9 @@ const Dashboard = () => {
                   <TableCell>
                     <Tooltip title="Prioridad basada en Churn y Antigüedad">
                       <Chip
-                        label={ticket.urgency || "Baja"}
+                        label={ticket.urgency || "N/A"}
                         size="small"
-                        color={ticket.urgency === "Alta" ? "error" : "default"}
+                        color={colorMap[ticket.urgency] || "default"}
                         icon={<InfoIcon />}
                       />
                     </Tooltip>
@@ -235,7 +248,8 @@ const Dashboard = () => {
                       onClick={(e) => {
                         e.stopPropagation(); // evita que el click seleccione la fila
                         setDialogTicket(ticket);
-                      }}>
+                      }}
+                    >
                       Ver Detalle
                     </Button>
                   </TableCell>
@@ -255,17 +269,20 @@ const Dashboard = () => {
         open={!!dialogTicket}
         onClose={() => setDialogTicket(null)}
         maxWidth="sm" // Controla el ancho máximo para que no se estire demasiado
-        fullWidth>
+        fullWidth
+      >
         <DialogTitle
           sx={{
             bgcolor: "background.paper",
             borderBottom: 1,
             borderColor: "divider",
-          }}>
+          }}
+        >
           <Box
             display="flex"
             justifyContent="space-between"
-            alignItems="center">
+            alignItems="center"
+          >
             <Typography variant="h6" component="div">
               Detalle del Ticket #{dialogTicket?.id}
             </Typography>
@@ -295,7 +312,8 @@ const Dashboard = () => {
               <Typography
                 variant="subtitle2"
                 color="text.secondary"
-                gutterBottom>
+                gutterBottom
+              >
                 Descripción del Caso
               </Typography>
               <Box
@@ -307,7 +325,8 @@ const Dashboard = () => {
                   borderColor: "grey.200",
                   maxHeight: "150px",
                   overflowY: "auto",
-                }}>
+                }}
+              >
                 <Typography variant="body2" style={{ whiteSpace: "pre-line" }}>
                   {dialogTicket?.text_processed ||
                     "Sin descripción disponible."}
@@ -330,7 +349,8 @@ const Dashboard = () => {
                       variant="caption"
                       display="flex"
                       alignItems="center"
-                      gap={0.5}>
+                      gap={0.5}
+                    >
                       <WorkIcon fontSize="inherit" /> Proyecto
                     </Typography>
                     <Typography variant="body2" fontWeight="medium">
@@ -346,7 +366,8 @@ const Dashboard = () => {
                       variant="caption"
                       display="flex"
                       alignItems="center"
-                      gap={0.5}>
+                      gap={0.5}
+                    >
                       <AccessTimeIcon fontSize="inherit" /> Antigüedad
                     </Typography>
                     <Typography variant="body2" fontWeight="medium">
@@ -362,7 +383,8 @@ const Dashboard = () => {
                       variant="caption"
                       display="flex"
                       alignItems="center"
-                      gap={0.5}>
+                      gap={0.5}
+                    >
                       <WarningAmberIcon fontSize="inherit" /> Riesgo Phishing
                     </Typography>
                     <Box mt={0.5}>
