@@ -35,13 +35,13 @@ def process_ticket_controller():
     # Teléfonos
     text_anon = re.sub(r"\b(3\d{9}|[0-9]{7,10})\b", "[PHONE]", text_anon)
     # Patrón robusto para passwords
-    pattern_creds = r"(?i)\b(password|contraseña|clave|pass|pin)\b\s*(?:es|is|:|de|en|acc|access)?\s*(\S+)"
+    pattern_creds = r"(?i)\b(password|contraseña|contrasena|clave|pass|pin)\b\s*(?:es|is|:|de|en|acc|access)?\s*(\S+)"
     text_anon = re.sub(pattern_creds, r"\1 [REDACTED]", text_anon)
 
     # B. Detección de Phishing con "IA"
     # Se usa el texto anonimizado (aunque el phishing suele estar en el texto original, 
     # la anonimización protege datos reales si se enviaran a una API externa)
-    phishing_prob = detect_phishing(text) # Usamos original para detectar patrones exactos de phishing
+    phishing_prob = detect_phishing(text_anon) # Usamos original para detectar patrones exactos de phishing
     
     if phishing_prob > 0.5:
         # Log interno detallado
