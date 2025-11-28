@@ -1,88 +1,88 @@
 from flask import request, jsonify, current_app
 import re
 import datetime
+from data.client_db import get_client_by_id
+from services.ai_service import detect_phishing, predict_churn, generate_insight
 
 def process_ticket_controller():
+    # 1. Recibir datos del Request
     data = request.get_json()
-
     text = data.get("text", "")
     client_id = data.get("client_id", "UNKNOWN")
     date = data.get("date", datetime.datetime.now().isoformat())
-    software_type = data.get("software_type", "General")
-    source = data.get("source", "Web") # Web or Email
+    source = data.get("source", "Web")
 
-    # Validaciones simples
+    # 2. VALIDACIÓN BÁSICA
     if not text:
-        return jsonify({"error": "El texto es obligatorio"}), 400
+        return jsonify({"error": "Solicitud incompleta"}), 400
 
-    # ------------------------------------------
-    # 1. SEGURIDAD: ANTI-PHISHING (Bloqueo)
-    # ------------------------------------------
-    # Palabras prohibidas que indican riesgo inmediato
-    blocked_keywords = ["password", "contraseña", "click aquí", "haz clic", "banco", "restablecer"]
-    if any(keyword in text.lower() for keyword in blocked_keywords):
-        return jsonify({
-            "error": "Bloqueado por seguridad",
-            "detalle": "Se detectaron palabras clave de phishing o ingeniería social."
-        }), 400
+    # 3. RECUPERAR CONTEXTO DEL CLIENTE
+    client_context = get_client_by_id(client_id)
+    real_antiguedad = client_context["antiguedad"]
+    project_name = client_context["proyecto"]
 
-    # ------------------------------------------
-    # 2. SEGURIDAD: ANONIMIZACIÓN (PII)
-    # ------------------------------------------
+    # ---------------------------------------------------------
+    # ETAPA DE SEGURIDAD (Phishing & Sanitización)
+    # ---------------------------------------------------------
+    
+    # A. Enmascarar datos sensibles (PII) - ANTES de la IA
     text_anon = text
     # Emails
     text_anon = re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "[EMAIL]", text_anon)
     # Teléfonos
     text_anon = re.sub(r"\b(3\d{9}|[0-9]{7,10})\b", "[PHONE]", text_anon)
+    # Patrón robusto para passwords
+    pattern_creds = r"(?i)\b(password|contraseña|clave|pass|pin)\b\s*(?:es|is|:|de|en|acc|access)?\s*(\S+)"
+    text_anon = re.sub(pattern_creds, r"\1 [REDACTED]", text_anon)
 
-    # ------------------------------------------
-    # 3. LÓGICA DE NEGOCIO Y CHURN
-    # ------------------------------------------
+    # B. Detección de Phishing con "IA"
+    # Se usa el texto anonimizado (aunque el phishing suele estar en el texto original, 
+    # la anonimización protege datos reales si se enviaran a una API externa)
+    phishing_prob = detect_phishing(text) # Usamos original para detectar patrones exactos de phishing
     
-    # Clasificación
+    if phishing_prob > 0.5:
+        # Log interno detallado
+        current_app.logger.warning(
+            f"SECURITY BLOCK: Phishing detected. ID: {client_id} | Project: {project_name} | Score: {phishing_prob:.2f}"
+        )
+        # Respuesta opaca al frontend (seguridad) - Error 400 pero "silencioso" para el usuario final
+        return jsonify({
+            "error": "Error de procesamiento.",
+            "code": "SECURITY_BLOCK",
+            "detail": "Solicitud rechazada por políticas de seguridad."
+        }), 400
+
+    # ---------------------------------------------------------
+    # ETAPA DE NEGOCIO (Usando el Contexto)
+    # ---------------------------------------------------------
+
+    # 1. Clasificación del Ticket (Lógica simple por ahora)
     clasificacion = "Correctivo" if any(w in text.lower() for w in ["error", "fallo", "bug", "caída", "no funciona"]) else "Evolutivo"
-    
-    # Datos del Cliente (Mock DB)
-    client_data = current_app.mock_clients_db.get(client_id, {"antiguedad_anos": 1, "satisfaccion": 5})
-    
-    # Cálculo de Churn Score (0-100)
-    # Fórmula: (Sentimiento Negativo * 0.6) + (Baja Antigüedad * 0.4)
-    # Simplificación: Sentimiento negativo basado en palabras clave
-    negative_words = ["lento", "malo", "pésimo", "error", "falla", "urgente", "molesto"]
-    sentiment_score = sum(1 for w in negative_words if w in text.lower()) * 20 # 0 a 100 aprox
-    sentiment_score = min(sentiment_score, 100)
-    
-    # Factor Antigüedad: Menos antigüedad = Más riesgo
-    # 0 años -> 100 riesgo, 10 años -> 0 riesgo
-    antiquity_factor = max(0, 100 - (client_data["antiguedad_anos"] * 10))
-    
-    churn_score = (sentiment_score * 0.6) + (antiquity_factor * 0.4)
-    churn_score = round(min(churn_score, 100), 2)
 
-    # Insight (Next Best Action)
-    insight = "Cliente estable. Mantener servicio estándar."
-    if churn_score > 70:
-        insight = "ALERTA DE CHURN: Cliente en riesgo. Contactar proactivamente y ofrecer descuento/capacitación."
-    elif clasificacion == "Evolutivo":
-        insight = "Oportunidad de Venta: Cliente interesado en mejoras. Ofrecer consultoría."
+    # 2. Predicción de Churn (¡Usando antiguedad real!)
+    churn_score, churn_level, churn_color = predict_churn(text_anon, real_antiguedad)
 
-    # ------------------------------------------
-    # 4. ALMACENAMIENTO Y RESPUESTA
-    # ------------------------------------------
+    # 3. Generación de Insights
+    final_recommendation = generate_insight(churn_score, clasificacion, project_name, real_antiguedad)
+
+    # ---------------------------------------------------------
+    # RESPUESTA
+    # ---------------------------------------------------------
     response = {
         "id": len(current_app.tickets_store) + 1,
         "client_id": client_id,
-        "text_original": text,
-        "text_anonimizado": text_anon,
-        "clasificacion": clasificacion,
+        "client_email": client_context["email"],
+        "text_processed": text_anon,
+        "classification": clasificacion,
         "churn_score": churn_score,
-        "insight": insight,
+        "churn_level": churn_level, # Nuevo campo
+        "churn_color": churn_color, # Nuevo campo
+        "insight": final_recommendation,
         "source": source,
-        "date": date,
-        "status": "Processed"
+        "status": "Success",
+        "project": project_name, # Contexto extra
+        "urgency": "Alta" if churn_score > 60 else "Baja" # Campo derivado para UI
     }
     
-    # Guardar en memoria
     current_app.tickets_store.append(response)
-
     return jsonify(response), 200
