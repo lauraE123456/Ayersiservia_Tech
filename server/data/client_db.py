@@ -32,7 +32,7 @@ CLIENT_DB = [
     },
     {
         "client_id": "CLIENT-005",
-        "client_email": "ceo@legacy.net",
+        "client_email": "laue0915@gmail.com",
         "antiguedad": 10,
         "proyecto": "Migración Cloud",
         "sector": "Banca"
