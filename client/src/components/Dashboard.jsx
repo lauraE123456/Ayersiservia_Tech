@@ -69,8 +69,17 @@ const Dashboard = () => {
   const highRiskCount = tickets.filter((t) => t.churn_score > 70).length;
 
   const getChurnColor = (score) => {
-    if (score > 70) return "error";
-    if (score > 40) return "warning";
+    // 1. Rango Crítico y Muy Alto (81 - 100) -> ROJO
+    if (score > 80) return "error";
+
+    // 2. Rango Alto (61 - 80) -> NARANJA (Warning suele ser naranja en Material UI)
+    if (score > 60) return "warning";
+
+    // 3. Rango Medio (31 - 60) -> AMARILLO (O "info" si quieres otro tono)
+    // Nota: Si usas Material UI, "warning" cubre amarillo/naranja.
+    if (score > 30) return "warning";
+
+    // 4. Rango Bajo (0 - 30) -> VERDE
     return "success";
   };
 
@@ -180,8 +189,7 @@ const Dashboard = () => {
                     <Chip
                       label={ticket.classification}
                       color={
-                        ticket.classification === "Evolutivo" ||
-                        ticket.classification === "Correctivo"
+                        ticket.classification === "Evolutivo"
                           ? "success"
                           : "error"
                       }

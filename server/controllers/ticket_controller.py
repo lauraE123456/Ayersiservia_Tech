@@ -81,7 +81,7 @@ def process_ticket_controller():
     clasificacion = "Correctivo" if any(w in text.lower() for w in ["error", "fallo", "bug", "caída", "no funciona"]) else "Evolutivo"
 
     # 2. Predicción de Churn (¡Usando antiguedad real!)
-    churn_score, churn_level, churn_color = predict_churn(text_anon, real_antiguedad)
+    churn_score, churn_level, churn_color = predict_churn(text_anon, real_antiguedad,clasificacion)
 
     # 3. Generación de Insights
     final_recommendation = generate_insight(churn_score, clasificacion, project_name, real_antiguedad)
