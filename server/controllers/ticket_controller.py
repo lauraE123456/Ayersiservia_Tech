@@ -8,7 +8,10 @@ def process_ticket_controller():
     # 1. Recibir datos del Request
     data = request.get_json()
     text = data.get("text", "")
+    body = data.get("body","")
     client_id = data.get("client_id", "UNKNOWN")
+    client_name = data.get("client_name","UNKNOWN")
+    client_email= data.get("client_email","unknown@domain.com" )
     date = data.get("date", datetime.datetime.now().isoformat())
     source = data.get("source", "Web")
 
@@ -17,7 +20,7 @@ def process_ticket_controller():
         return jsonify({"error": "Solicitud incompleta"}), 400
 
     # 3. RECUPERAR CONTEXTO DEL CLIENTE
-    client_context = get_client_by_id(client_id)
+    client_context = get_client_by_id(client_id,client_email)
     real_antiguedad = client_context["antiguedad"]
     project_name = client_context["proyecto"]
 
@@ -26,7 +29,7 @@ def process_ticket_controller():
     # ---------------------------------------------------------
     
     # A. Enmascarar datos sensibles (PII) - ANTES de la IA
-    text_anon = text
+    text_anon = body
     # Emails
     text_anon = re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "[EMAIL]", text_anon)
     # Teléfonos
@@ -68,10 +71,12 @@ def process_ticket_controller():
     # ---------------------------------------------------------
     # RESPUESTA
     # ---------------------------------------------------------
+    #client_context["email"] 
     response = {
         "id": len(current_app.tickets_store) + 1,
         "client_id": client_id,
-        "client_email": client_context["email"],
+        "client_email":  client_email,
+        "client_name": client_name,
         "text_processed": text_anon,
         "classification": clasificacion,
         "churn_score": churn_score,
