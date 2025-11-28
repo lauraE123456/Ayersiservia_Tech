@@ -208,23 +208,6 @@ const TicketForm = () => {
             </Box>
           </Box>
 
-          {/* ALERTA DE SEGURIDAD (MODAL/ALERT) */}
-          {apiError && (
-            <Alert
-              severity="error"
-              variant="filled"
-              sx={{
-                mt: 3,
-                bgcolor: "var(--vortex-danger)",
-                fontWeight: "bold",
-              }}>
-              <Typography variant="subtitle1" component="div">
-                🚫 BLOQUEO DE SEGURIDAD
-              </Typography>
-              {apiError}
-            </Alert>
-          )}
-
           {result && (
             <Box sx={{ mt: 4 }}>
               <Alert severity="success" sx={{ mb: 2 }}>

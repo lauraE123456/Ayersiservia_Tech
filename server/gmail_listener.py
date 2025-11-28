@@ -5,6 +5,8 @@ import requests
 import time
 import os
 from dotenv import load_dotenv
+from email.utils import parseaddr
+
 
 load_dotenv()
 # CONFIGURACIÓN (Placeholders)
@@ -63,10 +65,16 @@ def listen_gmail():
                             else:
                                 body = msg.get_payload(decode=True).decode()
                             
+                            client_name,client_email= parseaddr(from_)
+                            client_name = client_name.strip()
+                            client_email = client_email.strip().replace("<", "").replace(">", "")
                             # Enviar a la API
                             payload = {
-                                "text": f"{subject} - {body}",
-                                "client_id": from_, # Usamos el remitente como ID
+                                "head": f"{subject}",
+                                "body": f"{body}",
+                                "client_id": client_email, # Usamos el remitente como ID
+                                "client_name":client_name,
+                                "client_email":client_email,
                                 "source": "Email"
                             }
                             
