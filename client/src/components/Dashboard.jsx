@@ -16,12 +16,13 @@ import {
   Card,
   CardContent,
   IconButton,
+  Button,
+  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
-  Button,
   Alert,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -29,12 +30,15 @@ import SecurityIcon from "@mui/icons-material/Security";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import EmailIcon from "@mui/icons-material/Email";
 import WebIcon from "@mui/icons-material/Web";
+import InfoIcon from "@mui/icons-material/Info";
 import axios from "axios";
+import ClientDetail from "./ClientDetail";
 
 const Dashboard = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [dialogTicket, setDialogTicket] = useState(null); // Dialog detalle
 
   const fetchTickets = async () => {
     setLoading(true);
@@ -70,6 +74,16 @@ const Dashboard = () => {
     return "success";
   };
 
+  // If a ticket is selected, show the Detail View
+  if (selectedTicket) {
+    return (
+      <ClientDetail
+        ticket={selectedTicket}
+        onBack={() => setSelectedTicket(null)}
+      />
+    );
+  }
+  console.log(tickets);
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
@@ -137,8 +151,10 @@ const Dashboard = () => {
             <TableRow>
               <TableCell>Fuente</TableCell>
               <TableCell>Cliente</TableCell>
-              <TableCell>Clasificación</TableCell>
+              <TableCell>Tipo Mantenimiento </TableCell>
+
               <TableCell>Riesgo Churn</TableCell>
+              <TableCell>Urgencia</TableCell>
               <TableCell>Acción</TableCell>
             </TableRow>
           </TableHead>
@@ -147,7 +163,11 @@ const Dashboard = () => {
               .slice()
               .reverse()
               .map((ticket) => (
-                <TableRow key={ticket.id} hover>
+                <TableRow
+                  key={ticket.id}
+                  hover
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => setSelectedTicket(ticket)}>
                   <TableCell>
                     {ticket.source === "Email" ? (
                       <EmailIcon color="action" />
@@ -158,11 +178,12 @@ const Dashboard = () => {
                   <TableCell>{ticket.client_id}</TableCell>
                   <TableCell>
                     <Chip
-                      label={ticket.clasificacion}
+                      label={ticket.classification}
                       color={
-                        ticket.clasificacion === "Evolutivo"
+                        ticket.classification === "Evolutivo" ||
+                        ticket.classification === "Correctivo"
                           ? "success"
-                          : "default"
+                          : "error"
                       }
                       size="small"
                     />
@@ -185,17 +206,30 @@ const Dashboard = () => {
                     </Box>
                   </TableCell>
                   <TableCell>
+                    <Tooltip title="Prioridad basada en Churn y Antigüedad">
+                      <Chip
+                        label={ticket.urgency || "Baja"}
+                        size="small"
+                        color={ticket.urgency === "Alta" ? "error" : "default"}
+                        icon={<InfoIcon />}
+                      />
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell>
                     <Button
                       size="small"
-                      onClick={() => setSelectedTicket(ticket)}>
-                      Ver Insight
+                      onClick={(e) => {
+                        e.stopPropagation(); // evita que el click seleccione la fila
+                        setDialogTicket(ticket);
+                      }}>
+                      Ver Detalle
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
             {tickets.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={6} align="center">
                   No hay tickets procesados aún.
                 </TableCell>
               </TableRow>
@@ -203,25 +237,23 @@ const Dashboard = () => {
           </TableBody>
         </Table>
       </TableContainer>
-
-      {/* DETAIL MODAL */}
-      <Dialog open={!!selectedTicket} onClose={() => setSelectedTicket(null)}>
-        <DialogTitle>Detalle del Ticket #{selectedTicket?.id}</DialogTitle>
+      <Dialog open={!!dialogTicket} onClose={() => setDialogTicket(null)}>
+        <DialogTitle>Detalle del Ticket #{dialogTicket?.id}</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
-            <strong>Cliente:</strong> {selectedTicket?.client_id}
+            <strong>Cliente:</strong> {dialogTicket?.client_id}
           </DialogContentText>
           <DialogContentText sx={{ mb: 2 }}>
-            <strong>Texto Original:</strong>
+            <strong>Descripcion del Caso:</strong>
             <br />
-            {selectedTicket?.text_original}
+            {dialogTicket?.text_processed}
           </DialogContentText>
           <Alert severity="info" icon={<SecurityIcon />}>
-            <strong>Insight (IA):</strong> {selectedTicket?.insight}
+            <strong>Insight (IA):</strong> {dialogTicket?.insight}
           </Alert>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSelectedTicket(null)}>Cerrar</Button>
+          <Button onClick={() => setDialogTicket(null)}>Cerrar</Button>
         </DialogActions>
       </Dialog>
     </Container>
