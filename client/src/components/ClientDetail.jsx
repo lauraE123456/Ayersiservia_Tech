@@ -52,11 +52,25 @@ const ClientDetail = ({ ticket, onBack }) => {
 
   // --- EFECTO: EJECUTAR ANÁLISIS AUTOMÁTICO AL ABRIR ---
   useEffect(() => {
+    if (!ticket) return;
+
+    const STORAGE_KEY = `analysis_${ticket.client_id}`;
+
+    // 1️⃣ Revisar si ya existe un análisis guardado
+    const savedAnalysis = localStorage.getItem(STORAGE_KEY);
+
+    if (savedAnalysis) {
+      // Cargar análisis desde storage y evitar gastar tokens
+      setAiAnalysis(savedAnalysis);
+      setLoadingAI(false);
+      return;
+    }
+
+    // 2️⃣ Si no existe análisis → llamar IA SOLO una vez
     const fetchStrategicAnalysis = async () => {
       setLoadingAI(true);
+
       try {
-        // PROMPT ESPECIALIZADO PARA ACCOUNT MANAGER
-        // Le pedimos a la IA que actúe como un consultor de negocios, no soporte técnico.
         const payload = {
           message:
             "Genera el diagnóstico y la recomendación estratégica para este caso.",
@@ -75,7 +89,13 @@ const ClientDetail = ({ ticket, onBack }) => {
           "http://localhost:5000/api/chat",
           payload
         );
-        setAiAnalysis(response.data.reply);
+
+        const aiText = response.data.reply;
+
+        // Guardar en memoria local para no volver a gastar tokens
+        localStorage.setItem(STORAGE_KEY, aiText);
+
+        setAiAnalysis(aiText);
       } catch (error) {
         console.error("Error IA:", error);
         setAiAnalysis(
@@ -86,9 +106,7 @@ const ClientDetail = ({ ticket, onBack }) => {
       }
     };
 
-    if (ticket) {
-      fetchStrategicAnalysis();
-    }
+    fetchStrategicAnalysis();
   }, [ticket]);
 
   // --- DATOS PARA GRÁFICOS ---
