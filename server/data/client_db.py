@@ -18,7 +18,7 @@ CLIENT_DB = [
     },
     {
         "client_id": "CLIENT-003",
-        "client_email": "le8965aa.ut@cendi.edu.co",
+        "client_email": "lauraalbarracin553@gmail.com",
         "antiguedad": 3,
         "proyecto": "Mantenimiento E-commerce",
         "sector": "Retail"
