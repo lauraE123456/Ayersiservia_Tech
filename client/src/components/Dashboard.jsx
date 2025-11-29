@@ -26,6 +26,9 @@ import {
   Alert,
   AlertTitle,
   Stack,
+  Select, // <--- IMPORTANTE
+  MenuItem, // <--- IMPORTANTE
+  FormControl,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SecurityIcon from "@mui/icons-material/Security";
@@ -129,6 +132,45 @@ const Dashboard = () => {
 
     return true;
   });
+
+  // 1. NUEVA FUNCIÓN: Manejar el cambio de estado
+  const handleStatusChange = async (ticketId, newStatus) => {
+    // A. Actualización OPTIMISTA (Actualiza la UI inmediatamente antes de que responda el servidor)
+    setTickets((prevTickets) =>
+      prevTickets.map((t) =>
+        t.id === ticketId ? { ...t, status: newStatus } : t
+      )
+    );
+
+    try {
+      // B. Enviar al Backend
+      await axios.put(
+        `http://localhost:5000/api/update_ticket_status/${ticketId}/status`,
+        {
+          status: newStatus,
+        }
+      );
+      // Opcional: Podrías hacer un fetchTickets() aquí para confirmar, pero no es estrictamente necesario
+    } catch (error) {
+      console.error("Error actualizando estado:", error);
+      // Si falla, revertimos (opcional) o mostramos alerta
+      alert("No se pudo guardar el estado");
+    }
+  };
+
+  // 2. FUNCIÓN DE COLOR PARA EL ESTADO (Para que se vea bonito)
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Recibido":
+        return "info.main"; // Azul
+      case "Visto":
+        return "warning.main"; // Naranja
+      case "Respondido":
+        return "success.main"; // Verde
+      default:
+        return "text.primary";
+    }
+  };
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
@@ -224,7 +266,31 @@ const Dashboard = () => {
                   sx={{ cursor: "pointer" }}
                   onClick={() => setSelectedTicket(ticket)}
                 >
-                  <TableCell>Esatdo</TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <FormControl
+                      size="small"
+                      variant="standard"
+                      sx={{ minWidth: 100 }}
+                    >
+                      <Select
+                        value={ticket.status || "Recibido"} // Valor por defecto
+                        onChange={(e) =>
+                          handleStatusChange(ticket.id, e.target.value)
+                        }
+                        disableUnderline
+                        sx={{
+                          color: getStatusColor(ticket.status || "Recibido"),
+                          fontWeight: "bold",
+                          fontSize: "0.875rem",
+                          "& .MuiSelect-select": { padding: "4px 0" }, // Ajuste visual
+                        }}
+                      >
+                        <MenuItem value="Recibido">Recibido</MenuItem>
+                        <MenuItem value="Visto">Visto</MenuItem>
+                        <MenuItem value="Respondido">Respondido</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </TableCell>
                   <TableCell>
                     {ticket.source === "Email" ? (
                       <EmailIcon color="action" />
