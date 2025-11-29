@@ -10,24 +10,30 @@ import {
   Chip,
   TextField,
   MenuItem,
-  Alert,
-  CircularProgress,
   Card,
   CardContent,
   CardHeader,
   Divider,
   Avatar,
   Stack,
+  Skeleton,
+  IconButton,
+  Tooltip as MuiTooltip,
+  Snackbar,
 } from "@mui/material";
 
-// Iconos para darle vida visual
+// Iconos
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SendIcon from "@mui/icons-material/Send";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
-import PsychologyIcon from "@mui/icons-material/Psychology";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import PieChartIcon from "@mui/icons-material/PieChart";
+import HistoryIcon from "@mui/icons-material/History";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 
 // Gráficos
 import {
@@ -37,69 +43,93 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   Cell,
+  PieChart,
+  Pie,
+  Legend,
 } from "recharts";
 
+// --- CONFIGURACIÓN ---
+// Cambia esto a TRUE cuando tengas tu backend Python corriendo en localhost:5000
+const USE_LIVE_API = false;
+
+// Respuesta simulada para cuando no hay backend (Evita el Network Error)
+const MOCK_AI_RESPONSE = `Basado en el análisis histórico, este cliente presenta un riesgo crítico de fuga (Churn) debido a la recurrencia de incidentes técnicos no resueltos en los últimos 30 días.
+
+**Factores Clave detectados:**
+1. Fatiga por tickets repetitivos sobre el mismo módulo.
+2. Tono de frustración creciente en las comunicaciones.
+3. Comparación explícita con competidores en el último correo.
+
+**Recomendación Estratégica:**
+Sugiero una intervención proactiva inmediata. No esperes al próximo ticket. Programa una sesión de "Customer Success Review" para presentar el roadmap de soluciones y ofrecer un descuento por fidelidad del 10% en la próxima renovación.`;
+
+const DEFAULT_TICKET = {
+  client_id: "CLIENT-DEMO-001",
+  project: "Proyecto Alpha",
+  client_email: "demo@cliente.com",
+  churn_score: 75,
+  churn_level: "Alto",
+  churn_color: "#f44336",
+  urgency: "Alta",
+  text_processed:
+    "El cliente indica frustración recurrente con la estabilidad del servicio en horas pico. Menciona que ha abierto 3 tickets previos sin solución definitiva.",
+};
+
 const ClientDetail = ({ ticket, onBack }) => {
-  const [urgency, setUrgency] = useState(ticket.urgency || "Media");
+  const safeTicket = ticket || DEFAULT_TICKET;
+
+  const [urgency, setUrgency] = useState(safeTicket.urgency || "Media");
   const [emailSent, setEmailSent] = useState(false);
-
-  // --- ESTADOS IA ---
   const [aiAnalysis, setAiAnalysis] = useState("");
-  const [loadingAI, setLoadingAI] = useState(false);
+  const [loadingAI, setLoadingAI] = useState(true);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  // --- EFECTO: EJECUTAR ANÁLISIS AUTOMÁTICO AL ABRIR ---
+  console.log("info:", safeTicket);
+  // --- EFECTO: ANÁLISIS AUTOMÁTICO ---
   useEffect(() => {
-    if (!ticket) return;
-
-    const STORAGE_KEY = `analysis_${ticket.client_id}`;
-
-    // 1️⃣ Revisar si ya existe un análisis guardado
-    const savedAnalysis = localStorage.getItem(STORAGE_KEY);
-
-    if (savedAnalysis) {
-      // Cargar análisis desde storage y evitar gastar tokens
-      setAiAnalysis(savedAnalysis);
-      setLoadingAI(false);
-      return;
-    }
-
-    // 2️⃣ Si no existe análisis → llamar IA SOLO una vez
     const fetchStrategicAnalysis = async () => {
       setLoadingAI(true);
 
+      // Limpiamos cualquier error previo
+      setAiAnalysis("");
+
       try {
-        const payload = {
-          message:
-            "Genera el diagnóstico y la recomendación estratégica para este caso.",
-          contexto: {
-            client_name: ticket.client_id,
-            churn_score: ticket.churn_score,
-            ticket_text: ticket.text_processed,
-            status: ticket.status,
-            project: ticket.project,
-            antiguedad: ticket.real_antiguedad,
-            urgency: ticket.urgency,
-          },
-        };
+        if (USE_LIVE_API) {
+          // --- MODO REAL (Backend) ---
+          const payload = {
+            message:
+              "Genera el diagnóstico y la recomendación estratégica ejecutiva para este caso.",
+            context: {
+              client_name: safeTicket.client_id,
+              churn_score: safeTicket.churn_score,
+              ticket_text: safeTicket.text_processed,
+              status: safeTicket.status,
+              project: safeTicket.project,
+              antiguedad: safeTicket.real_antiguedad,
+              urgency: safeTicket.urgency,
+            },
+          };
 
-        const response = await axios.post(
-          "http://localhost:5000/api/chat",
-          payload
-        );
-
-        const aiText = response.data.reply;
-
-        // Guardar en memoria local para no volver a gastar tokens
-        localStorage.setItem(STORAGE_KEY, aiText);
-
-        setAiAnalysis(aiText);
+          const response = await axios.post(
+            "http://localhost:5000/api/chat",
+            payload
+          );
+          const replyText =
+            typeof response.data.reply === "string"
+              ? response.data.reply
+              : JSON.stringify(response.data.reply);
+          setAiAnalysis(replyText);
+        } else {
+          // --- MODO SIMULACIÓN (Sin errores de consola) ---
+          await new Promise((r) => setTimeout(r, 2000)); // Simula "pensando"
+          setAiAnalysis(MOCK_AI_RESPONSE);
+        }
       } catch (error) {
-        console.error("Error IA:", error);
+        console.warn("Error en conexión IA (usando fallback):", error);
         setAiAnalysis(
-          "No se pudo generar el análisis estratégico en este momento."
+          "⚠️ No se pudo conectar con el asistente estratégico. Verifica que el servidor backend esté corriendo en el puerto 5000."
         );
       } finally {
         setLoadingAI(false);
@@ -107,238 +137,499 @@ const ClientDetail = ({ ticket, onBack }) => {
     };
 
     fetchStrategicAnalysis();
-  }, [ticket]);
+  }, [safeTicket]);
 
-  // --- DATOS PARA GRÁFICOS ---
-  const chartData = [
-    {
-      name: "Salud Cliente",
-      valor: 100 - ticket.churn_score,
-      color: "#4caf50",
-    }, // Verde
-    {
-      name: "Riesgo Fuga",
-      valor: ticket.churn_score,
-      color: ticket.churn_color || "#f44336",
-    }, // Rojo/Dinámico
-    { name: "Promedio Industria", valor: 45, color: "#9e9e9e" }, // Gris
-  ];
+  const handleCopyAnalysis = () => {
+    if (aiAnalysis) {
+      navigator.clipboard.writeText(aiAnalysis);
+      setOpenSnackbar(true);
+    }
+  };
 
   const handleSendEmail = () => {
     setEmailSent(true);
     setTimeout(() => setEmailSent(false), 3000);
   };
 
+  // --- DATOS GRÁFICOS ---
+  const healthData = [
+    { name: "Salud", valor: 100 - safeTicket.churn_score, color: "#4caf50" },
+    {
+      name: "Riesgo",
+      valor: safeTicket.churn_score,
+      color: safeTicket.churn_color || "#f44336",
+    },
+  ];
+
+  const maintenanceData = [
+    { name: "Correctivo", value: 65, color: "#FF8042" },
+    { name: "Preventivo", value: 35, color: "#0088FE" },
+  ];
+
+  const projectData = [
+    { name: "Web App", value: 40, color: "#00C49F" },
+    { name: "Mobile", value: 30, color: "#FFBB28" },
+    { name: "API", value: 30, color: "#FF8042" },
+  ];
+
   return (
-    <Container maxWidth="xl" sx={{ mt: 3, mb: 4 }}>
-      {/* Botón Volver */}
+    <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
       <Button
         startIcon={<ArrowBackIcon />}
         onClick={onBack}
-        sx={{ mb: 2, fontWeight: "bold" }}
+        sx={{ mb: 2, textTransform: "none", color: "text.secondary" }}
       >
-        Volver al Tablero
+        Volver
       </Button>
 
-      {/* --- ENCABEZADO: INFORMACIÓN CLAVE DEL CLIENTE --- */}
+      {/* --- ENCABEZADO --- */}
       <Paper
-        elevation={2}
-        sx={{ p: 3, mb: 3, borderLeft: `6px solid ${ticket.churn_color}` }}
+        elevation={0}
+        sx={{
+          p: 2,
+          mb: 3,
+          border: `1px solid #e0e0e0`,
+          borderLeft: `6px solid ${safeTicket.churn_color}`,
+          borderRadius: 2,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          background: "#fff",
+        }}
       >
-        <Grid container alignItems="center" spacing={2}>
-          <Grid item xs={12} md={8}>
-            <Typography variant="h4" fontWeight="bold" gutterBottom>
-              {ticket.client_id}
-            </Typography>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Chip label={`Proyecto: ${ticket.project}`} variant="outlined" />
-              <Chip
-                label={`Email: ${ticket.client_email}`}
-                variant="outlined"
-              />
-              <Chip
-                icon={<WarningAmberIcon />}
-                label={`Riesgo: ${ticket.churn_level}`}
-                sx={{
-                  bgcolor: ticket.churn_color,
-                  color: "white",
-                  fontWeight: "bold",
-                }}
-              />
-            </Stack>
-          </Grid>
-          <Grid item xs={12} md={4} textAlign="right">
-            <Typography
-              variant="h3"
-              color={ticket.churn_color}
-              fontWeight="bold"
-            >
-              {ticket.churn_score}%
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              PROBABILIDAD DE CHURN
-            </Typography>
-          </Grid>
-        </Grid>
+        <Box>
+          <Typography variant="h5" fontWeight="800" sx={{ color: "#2c3e50" }}>
+            {safeTicket.client_id}
+          </Typography>
+          <Stack direction="row" spacing={1} mt={1}>
+            <Chip
+              label={`Proyecto: ${safeTicket.project}`}
+              size="small"
+              variant="outlined"
+              color="primary"
+            />
+            <Chip
+              label={safeTicket.client_email}
+              size="small"
+              variant="outlined"
+              icon={<SendIcon sx={{ fontSize: 14 }} />}
+            />
+          </Stack>
+        </Box>
+        <Box textAlign="right">
+          <Typography
+            variant="h4"
+            fontWeight="900"
+            color={safeTicket.churn_color}
+            sx={{ lineHeight: 1 }}
+          >
+            {safeTicket.churn_score}%
+          </Typography>
+          <Typography
+            variant="caption"
+            fontWeight="bold"
+            color="text.secondary"
+          >
+            RIESGO CHURN
+          </Typography>
+        </Box>
       </Paper>
 
-      <Grid container spacing={3}>
-        {/* --- COLUMNA IZQUIERDA: ANÁLISIS IA (Estratégico) --- */}
-        <Grid item xs={12} md={7}>
+      {/* --- LAYOUT PRINCIPAL --- */}
+      <Grid container spacing={4} alignItems="stretch">
+        {/* === COLUMNA IZQUIERDA: CHAT IA === */}
+        <Grid
+          item
+          xs={12}
+          lg={7}
+          sx={{ display: "flex", flexDirection: "column" }}
+        >
           <Card
-            elevation={4}
-            sx={{ height: "100%", position: "relative", overflow: "visible" }}
+            elevation={3}
+            sx={{
+              flexGrow: 1,
+              borderRadius: 2,
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+              minHeight: "600px",
+            }}
           >
             <CardHeader
               avatar={
-                <Avatar sx={{ bgcolor: "var(--vortex-primary)" }}>
-                  <PsychologyIcon />
+                <Avatar
+                  sx={{ bgcolor: "#e3f2fd", border: "1px solid #bbdefb" }}
+                >
+                  <SmartToyIcon color="primary" />
                 </Avatar>
               }
+              action={
+                !loadingAI && (
+                  <MuiTooltip title="Copiar análisis">
+                    <IconButton onClick={handleCopyAnalysis}>
+                      <ContentCopyIcon fontSize="small" />
+                    </IconButton>
+                  </MuiTooltip>
+                )
+              }
               title={
-                <Typography variant="h6" fontWeight="bold">
-                  Análisis del Account Manager (IA)
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  sx={{ display: "flex", alignItems: "center" }}
+                >
+                  Consultor Estratégico
+                  {loadingAI && (
+                    <Typography
+                      variant="caption"
+                      sx={{ ml: 2, color: "text.secondary" }}
+                    >
+                      Analizando...
+                    </Typography>
+                  )}
                 </Typography>
               }
-              subheader="Recomendación estratégica basada en datos históricos"
+              subheader="Diagnóstico inteligente basado en historial."
+              sx={{ borderBottom: "1px solid #f0f0f0", py: 1.5 }}
             />
-            <Divider />
-            <CardContent>
-              {loadingAI ? (
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  alignItems="center"
-                  py={5}
-                >
-                  <CircularProgress color="secondary" />
-                  <Typography
-                    variant="body2"
-                    sx={{ mt: 2 }}
-                    color="text.secondary"
-                  >
-                    Analizando patrones de comportamiento y generando
-                    estrategia...
-                  </Typography>
-                </Box>
-              ) : (
-                <Box
-                  sx={{
-                    bgcolor: "#f5f5ff",
-                    p: 2,
-                    borderRadius: 2,
-                    border: "1px dashed #6c5ce7",
-                  }}
-                >
+
+            <CardContent
+              sx={{
+                flexGrow: 1,
+                p: 0,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <Box
+                sx={{
+                  p: 3,
+                  flexGrow: 1,
+                  overflowY: "auto",
+                  bgcolor: "#fff",
+                  maxHeight: "550px",
+                  "&::-webkit-scrollbar": { width: "6px" },
+                  "&::-webkit-scrollbar-thumb": {
+                    background: "#ccc",
+                    borderRadius: "4px",
+                  },
+                }}
+              >
+                {loadingAI ? (
+                  <Box>
+                    <Skeleton height={40} width="60%" />
+                    <Skeleton height={20} />
+                    <Skeleton height={20} />
+                    <Skeleton height={100} />
+                  </Box>
+                ) : (
                   <Typography
                     variant="body1"
-                    sx={{ whiteSpace: "pre-line", lineHeight: 1.8 }}
+                    sx={{
+                      whiteSpace: "pre-line",
+                      color: "#37474f",
+                      lineHeight: 1.8,
+                    }}
                   >
-                    {aiAnalysis}
+                    {/* Aseguramos que se renderice texto limpio */}
+                    {typeof aiAnalysis === "string"
+                      ? aiAnalysis
+                      : JSON.stringify(aiAnalysis)}
                   </Typography>
-                </Box>
-              )}
+                )}
+              </Box>
 
-              {/* Contexto del Ticket Original */}
-              <Box mt={3}>
+              <Box
+                sx={{ p: 2, bgcolor: "#fcfcfc", borderTop: "1px solid #eee" }}
+              >
                 <Typography
-                  variant="subtitle2"
+                  variant="caption"
                   color="text.secondary"
+                  display="flex"
+                  alignItems="center"
                   gutterBottom
                 >
                   <LightbulbIcon
-                    fontSize="small"
-                    sx={{ verticalAlign: "middle", mr: 1 }}
+                    fontSize="inherit"
+                    sx={{ mr: 0.5, color: "#fbc02d" }}
                   />
-                  Contexto del Ticket Original:
+                  Contexto del ticket original:
                 </Typography>
                 <Typography
                   variant="body2"
-                  color="text.primary"
-                  sx={{ fontStyle: "italic", bgcolor: "#f9f9f9", p: 1 }}
+                  color="text.secondary"
+                  sx={{
+                    fontStyle: "italic",
+                    borderLeft: "3px solid #e0e0e0",
+                    pl: 1.5,
+                    maxHeight: "60px",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                  }}
                 >
-                  "{ticket.text_processed}"
+                  "{safeTicket.text_processed}"
                 </Typography>
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* --- COLUMNA DERECHA: ESTADÍSTICAS Y ACCIONES --- */}
-        <Grid item xs={12} md={5}>
-          <Stack spacing={3}>
-            {/* 1. GRÁFICO ESTADÍSTICO INTUITIVO */}
-            <Paper elevation={3} sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" mb={1}>
-                <AutoGraphIcon color="action" sx={{ mr: 1 }} />
-                <Typography variant="h6">Métricas de Salud</Typography>
-              </Box>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart
-                  data={chartData}
-                  layout="vertical"
-                  margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" domain={[0, 100]} hide />
-                  <YAxis
-                    dataKey="name"
-                    type="category"
-                    width={100}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <Tooltip cursor={{ fill: "transparent" }} />
-                  <Bar dataKey="valor" barSize={20} radius={[0, 10, 10, 0]}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </Paper>
-
-            {/* 2. ACCIONES RÁPIDAS */}
-            <Paper elevation={3} sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Gestión de Cuenta
-              </Typography>
-
-              <TextField
-                select
-                fullWidth
-                label="Prioridad de Atención"
-                value={urgency}
-                onChange={(e) => setUrgency(e.target.value)}
-                size="small"
-                sx={{ mb: 2 }}
-              >
-                <MenuItem value="Baja">Baja (Monitoreo)</MenuItem>
-                <MenuItem value="Media">Media (Seguimiento)</MenuItem>
-                <MenuItem value="Alta">Alta (Riesgo)</MenuItem>
-                <MenuItem value="Crítica">Crítica (Fuga Inminente)</MenuItem>
-              </TextField>
-
-              <Button
-                variant="contained"
-                fullWidth
-                size="large"
-                endIcon={emailSent ? <CheckCircleIcon /> : <SendIcon />}
-                color={emailSent ? "success" : "primary"}
-                onClick={handleSendEmail}
-                disabled={emailSent}
-              >
-                {emailSent ? "Plan Enviado" : "Enviar Plan de Acción"}
-              </Button>
-
-              {emailSent && (
-                <Alert severity="success" sx={{ mt: 1, fontSize: "0.85rem" }}>
-                  Notificación enviada al equipo y al cliente.
-                </Alert>
-              )}
-            </Paper>
-          </Stack>
-        </Grid>
+        {/* === COLUMNA DERECHA: DASHBOARD UNIFICADO === */}
       </Grid>
+      <div style={{ height: 24 }}></div>
+      <Grid
+        item
+        xs={12}
+        lg={7}
+        sx={{ display: "flex", flexDirection: "column" }}
+      >
+        <Card
+          elevation={3}
+          sx={{
+            width: "100%",
+            borderRadius: 2,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <CardHeader
+            title="Visión 360° de la Cuenta"
+            subheader="Métricas clave e indicadores de rendimiento"
+            avatar={
+              <Avatar sx={{ bgcolor: "#fff3e0", color: "#ed6c02" }}>
+                <AssessmentIcon />
+              </Avatar>
+            }
+            sx={{ borderBottom: "1px solid #f0f0f0", py: 1.5 }}
+          />
+
+          <CardContent
+            sx={{
+              flexGrow: 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: 3,
+              pt: 3,
+            }}
+          >
+            {/* 1. SECCIÓN PRINCIPAL: SALUD */}
+            <Box>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                fontWeight="bold"
+                gutterBottom
+              >
+                SALUD GENERAL VS RIESGO
+              </Typography>
+              <Box
+                sx={{
+                  height: 60,
+                  width: "100%",
+                  bgcolor: "#fafafa",
+                  borderRadius: 2,
+                  p: 1,
+                  border: "1px solid #eee",
+                }}
+              >
+                <ResponsiveContainer>
+                  <BarChart
+                    layout="vertical"
+                    data={healthData}
+                    margin={{ left: 0, right: 30 }}
+                  >
+                    <XAxis type="number" hide />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={60}
+                      tick={{ fontSize: 11, fontWeight: "bold" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Bar dataKey="valor" barSize={20} radius={[0, 4, 4, 0]}>
+                      {healthData.map((entry, index) => (
+                        <Cell key={index} fill={entry.color} />
+                      ))}
+                    </Bar>
+                    <Tooltip
+                      cursor={false}
+                      contentStyle={{ borderRadius: 8, fontSize: 12 }}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Box>
+            </Box>
+
+            <Divider />
+
+            {/* 2. GRID DE DETALLES */}
+            <Grid container spacing={2}>
+              {/* Antigüedad */}
+              <Grid item xs={6}>
+                <Box sx={{ textAlign: "center", p: 1 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight="bold"
+                  >
+                    ANTIGÜEDAD
+                  </Typography>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="center"
+                    spacing={1}
+                    sx={{ mt: 1 }}
+                  >
+                    <HistoryIcon color="action" fontSize="large" />
+                    <Box>
+                      <Typography
+                        variant="h5"
+                        fontWeight="bold"
+                        color="primary"
+                        sx={{ lineHeight: 1 }}
+                      >
+                        {safeTicket.real_antiguedad || 0}
+                      </Typography>
+                      <Typography variant="caption" display="block">
+                        Años
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Box>
+              </Grid>
+
+              {/* Mantenimiento (Mini Donut) */}
+              <Grid item xs={6} sx={{ borderLeft: "1px solid #eee" }}>
+                <Box sx={{ textAlign: "center", height: 80, width: "100%" }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight="bold"
+                    sx={{ mb: 0.5, display: "block" }}
+                  >
+                    MANTENIMIENTO
+                  </Typography>
+                  <ResponsiveContainer>
+                    <PieChart>
+                      <Pie
+                        data={maintenanceData}
+                        innerRadius={20}
+                        outerRadius={35}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
+                        {maintenanceData.map((entry, index) => (
+                          <Cell key={index} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Grid>
+            </Grid>
+
+            {/* Distribución de Proyectos */}
+            <Box sx={{ mt: -1 }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight="bold"
+                sx={{ ml: 1 }}
+              >
+                DISTRIBUCIÓN DE TICKETS POR PROYECTO
+              </Typography>
+              <Box sx={{ height: 140, width: "100%" }}>
+                <ResponsiveContainer>
+                  <BarChart
+                    data={projectData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 10 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "#f5f5f5" }}
+                      contentStyle={{ borderRadius: 8, fontSize: 12 }}
+                    />
+                    <Bar dataKey="value" fill="#8884d8" radius={[4, 4, 0, 0]}>
+                      {projectData.map((entry, index) => (
+                        <Cell key={index} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </Box>
+            </Box>
+
+            {/* 3. SECCIÓN DE ACCIÓN */}
+            <Box sx={{ mt: "auto", pt: 2, borderTop: "1px dashed #e0e0e0" }}>
+              <Box sx={{ bgcolor: "#f5f9ff", p: 2, borderRadius: 2 }}>
+                <Typography
+                  variant="subtitle2"
+                  color="primary"
+                  fontWeight="bold"
+                  gutterBottom
+                >
+                  Acciones Recomendadas
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  <TextField
+                    select
+                    fullWidth
+                    label="Prioridad"
+                    value={urgency}
+                    onChange={(e) => setUrgency(e.target.value)}
+                    size="small"
+                    sx={{ bgcolor: "white" }}
+                  >
+                    <MenuItem value="Baja">🟢 Baja</MenuItem>
+                    <MenuItem value="Media">🟡 Media</MenuItem>
+                    <MenuItem value="Alta">🟠 Alta</MenuItem>
+                    <MenuItem value="Crítica">🔴 Crítica</MenuItem>
+                  </TextField>
+                  <Button
+                    variant="contained"
+                    onClick={handleSendEmail}
+                    disabled={emailSent}
+                    endIcon={emailSent ? <CheckCircleIcon /> : <SendIcon />}
+                    sx={{
+                      minWidth: 100,
+                      textTransform: "none",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {emailSent ? "Listo" : "Enviar"}
+                  </Button>
+                </Stack>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* SNACKBAR */}
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={() => setOpenSnackbar(false)}
+        message="Análisis copiado al portapapeles"
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      />
     </Container>
   );
 };
