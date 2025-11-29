@@ -57,6 +57,7 @@ const ClientDetail = ({ ticket, onBack }) => {
   const [loadingAI, setLoadingAI] = useState(true);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [message, setMessage] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
   console.log("info:", ticket);
   // --- EFECTO: ANÁLISIS AUTOMÁTICO ---
 
@@ -106,10 +107,47 @@ const ClientDetail = ({ ticket, onBack }) => {
       setOpenSnackbar(true);
     }
   };
+  // enviar mensaje al cliente
+  const handleSendEmail = async () => {
+    // 1. Validaciones básicas
+    if (!message.trim()) {
+      alert("Por favor escribe un mensaje antes de enviar.");
+      return;
+    }
+    if (!ticket.client_email) {
+      alert("Este ticket no tiene un correo de cliente asociado.");
+      return;
+    }
 
-  const handleSendEmail = () => {
-    setEmailSent(true);
-    setTimeout(() => setEmailSent(false), 3000);
+    setSendingEmail(true); // Bloquear botón
+
+    try {
+      // 2. Petición al Backend Python
+      const response = await axios.post(
+        "http://localhost:5000/api/send-email",
+        {
+          userEmail: ticket.client_email, // Usamos el email que viene en el prop 'ticket'
+          userName: ticket.client_id, // Usamos el ID o nombre del cliente
+          message: message, // El texto que escribiste
+          urgency: urgency, // La prioridad seleccionada
+        }
+      );
+
+      // 3. Éxito
+      if (response.data.success) {
+        setEmailSent(true);
+        setMessage(""); // Limpiar el campo de texto
+        setTimeout(() => setEmailSent(false), 3000); // Quitar icono de éxito a los 3 seg
+      }
+    } catch (error) {
+      // 4. Error
+      console.error("Error enviando correo:", error);
+      alert(
+        "Hubo un error al enviar el correo. Revisa la consola o que el servidor esté prendido."
+      );
+    } finally {
+      setSendingEmail(false); // Desbloquear botón
+    }
   };
 
   // --- DATOS GRÁFICOS ---
@@ -580,15 +618,27 @@ const ClientDetail = ({ ticket, onBack }) => {
                   <Button
                     variant="contained"
                     onClick={handleSendEmail}
-                    disabled={emailSent}
-                    endIcon={emailSent ? <CheckCircleIcon /> : <SendIcon />}
+                    // Se deshabilita si ya se envió, si se está enviando o si no hay mensaje
+                    disabled={emailSent || sendingEmail || !message}
+                    endIcon={
+                      emailSent ? (
+                        <CheckCircleIcon />
+                      ) : sendingEmail ? null : (
+                        <SendIcon />
+                      )
+                    }
                     sx={{
                       minWidth: 100,
                       textTransform: "none",
                       fontWeight: "bold",
                     }}
                   >
-                    {emailSent ? "Listo" : "Enviar"}
+                    {/* Texto dinámico del botón */}
+                    {emailSent
+                      ? "Listo"
+                      : sendingEmail
+                      ? "Enviando..."
+                      : "Enviar"}
                   </Button>
                 </Stack>
               </Box>

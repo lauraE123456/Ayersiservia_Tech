@@ -106,12 +106,14 @@ const TicketForm = () => {
             borderRadius: 2,
             background: "background.paper",
             borderTop: "4px solid var(--vortex-primary)",
-          }}>
+          }}
+        >
           <Typography
             variant="h4"
             component="h2"
             gutterBottom
-            sx={{ fontWeight: 600, color: "var(--vortex-primary)" }}>
+            sx={{ fontWeight: 600, color: "var(--vortex-primary)" }}
+          >
             Nuevo Ticket de Soporte
           </Typography>
           <Typography variant="body1" color="text.secondary" paragraph>
@@ -123,7 +125,8 @@ const TicketForm = () => {
             component="form"
             onSubmit={handleSubmit}
             noValidate
-            sx={{ mt: 2 }}>
+            sx={{ mt: 2 }}
+          >
             <TextField
               fullWidth
               label="ID del Cliente"
@@ -158,7 +161,8 @@ const TicketForm = () => {
                 gap: 2,
                 mt: 2,
                 flexDirection: { xs: "column", sm: "row" },
-              }}>
+              }}
+            >
               <DatePicker
                 label="Fecha del Incidente"
                 value={formData.date}
@@ -172,7 +176,8 @@ const TicketForm = () => {
                 label="Tipo de Software"
                 name="software_type"
                 value={formData.software_type}
-                onChange={handleChange}>
+                onChange={handleChange}
+              >
                 {[
                   "Phishing",
                   "Correo sospechoso",
@@ -202,7 +207,8 @@ const TicketForm = () => {
                 }}
                 startIcon={
                   loading && <CircularProgress size={20} color="inherit" />
-                }>
+                }
+              >
                 {loading ? "Procesando..." : "Procesar Ticket"}
               </Button>
             </Box>
@@ -221,7 +227,8 @@ const TicketForm = () => {
                   color: "common.white",
                   overflowX: "auto",
                   border: "1px solid var(--vortex-success)",
-                }}>
+                }}
+              >
                 <pre style={{ margin: 0, fontFamily: "Fira Code, monospace" }}>
                   {JSON.stringify(result, null, 2)}
                 </pre>
