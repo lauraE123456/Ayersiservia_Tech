@@ -109,7 +109,8 @@ def process_ticket_controller():
         "project": project_name, # Contexto extra
         "real_antiguedad": real_antiguedad,
         "urgency": churn_level, # Campo derivado para UI
-        "phishing_prob":phishing_prob
+        "phishing_prob":phishing_prob,
+        "date":date
     }
     
     current_app.tickets_store.append(response)

@@ -102,24 +102,28 @@ const Dashboard = () => {
   // 3. LÓGICA DE FILTRADO
   // Creamos una variable derivada, NO modificamos 'tickets' directamente
   const filteredTickets = tickets.filter((ticket) => {
+    // Validación de seguridad: si el ticket no tiene fecha, lo ignoramos o lo mostramos según prefieras
+    if (!ticket.date) return false;
+
     // A. Filtrar por Estado
     if (filters.status && ticket.status !== filters.status) {
       return false;
     }
 
     // B. Filtrar por Fechas
-    // Asumimos que ticket.date viene en formato YYYY-MM-DD o ISO
+    const ticketDate = new Date(ticket.date); // Fecha del ticket (con hora exacta)
+
+    // Filtro FECHA INICIO
     if (filters.startDate) {
-      const ticketDate = new Date(ticket.date);
-      const filterStart = new Date(filters.startDate);
+      const filterStart = new Date(filters.startDate + "T00:00:00");
+
       if (ticketDate < filterStart) return false;
     }
 
+    // Filtro FECHA FIN
     if (filters.endDate) {
-      const ticketDate = new Date(ticket.date);
-      const filterEnd = new Date(filters.endDate);
-      // Ajustamos el final del día para incluir la fecha seleccionada
-      filterEnd.setHours(23, 59, 59);
+      const filterEnd = new Date(filters.endDate + "T23:59:59");
+
       if (ticketDate > filterEnd) return false;
     }
 
