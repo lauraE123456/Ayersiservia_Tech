@@ -17,12 +17,12 @@ def test_omnichannel():
     try:
         r = requests.post(url_process, json=phishing_payload)
         if r.status_code == 400:
-            print("✅ PASS: Phishing bloqueado correctamente (400).")
+            print(" PASS: Phishing bloqueado correctamente (400).")
             print(f"   -> Respuesta (debe ser opaca): {r.json()}")
         else:
-            print(f"❌ FAIL: Phishing no bloqueado. Status: {r.status_code}, Resp: {r.json()}")
+            print(f" FAIL: Phishing no bloqueado. Status: {r.status_code}, Resp: {r.json()}")
     except Exception as e:
-        print(f"❌ ERROR: {e}")
+        print(f" ERROR: {e}")
 
     # 2. Test Churn Alto (Cliente Nuevo + Queja)
     print("\n2. Probando Cálculo de Churn (Riesgo Alto)...")
@@ -37,7 +37,7 @@ def test_omnichannel():
         r = requests.post(url_process, json=risk_payload)
         data = r.json()
         if r.status_code == 200:
-            print(f"✅ PASS: Ticket procesado.")
+            print(f" PASS: Ticket procesado.")
             print(f"   -> Churn Score: {data.get('churn_score')}")
             print(f"   -> Nivel: {data.get('churn_level')}")
             print(f"   -> Insight: {data.get('insight')}")
@@ -47,21 +47,21 @@ def test_omnichannel():
             else:
                 print(f"   -> WARNING: Churn Score bajo ({data.get('churn_score')}). Revisar fórmula.")
         else:
-            print(f"❌ FAIL: Error procesando ticket. Status: {r.status_code}")
+            print(f" FAIL: Error procesando ticket. Status: {r.status_code}")
     except Exception as e:
-        print(f"❌ ERROR: {e}")
+        print(f" ERROR: {e}")
 
     # 3. Test Dashboard Data
     print("\n3. Verificando Datos del Dashboard...")
     try:
         r = requests.get(url_dashboard)
         tickets = r.json()
-        print(f"✅ PASS: Dashboard API respondió. Tickets almacenados: {len(tickets)}")
+        print(f" PASS: Dashboard API respondió. Tickets almacenados: {len(tickets)}")
         if len(tickets) > 0:
             last_ticket = tickets[-1]
             print(f"   -> Último ticket: {last_ticket['client_id']} - Urgencia: {last_ticket.get('urgency')}")
     except Exception as e:
-        print(f"❌ ERROR: {e}")
+        print(f" ERROR: {e}")
 
 if __name__ == "__main__":
     test_omnichannel()
