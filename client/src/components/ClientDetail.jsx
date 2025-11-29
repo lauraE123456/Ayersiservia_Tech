@@ -56,7 +56,7 @@ const ClientDetail = ({ ticket, onBack }) => {
   const [aiAnalysis, setAiAnalysis] = useState("");
   const [loadingAI, setLoadingAI] = useState(true);
   const [openSnackbar, setOpenSnackbar] = useState(false);
-
+  const [message, setMessage] = useState("");
   console.log("info:", ticket);
   // --- EFECTO: ANÁLISIS AUTOMÁTICO ---
 
@@ -548,6 +548,20 @@ const ClientDetail = ({ ticket, onBack }) => {
                 >
                   Acciones Recomendadas
                 </Typography>
+                <TextField
+                  label="Mensaje para el usuario"
+                  placeholder="Escribe aquí las instrucciones o comentarios..."
+                  multiline
+                  rows={3}
+                  fullWidth
+                  value={message} // Asumiendo que tienes un estado: const [message, setMessage] = useState("");
+                  onChange={(e) => setMessage(e.target.value)}
+                  size="small"
+                  sx={{
+                    bgcolor: "white",
+                    mb: 2, // Margen inferior para separar de los controles de abajo
+                  }}
+                />
                 <Stack direction="row" spacing={1}>
                   <TextField
                     select
