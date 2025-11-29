@@ -295,7 +295,15 @@ const Dashboard = () => {
                           Recibido
                         </MenuItem>
                         <MenuItem value="Visto">Visto</MenuItem>
-                        <MenuItem value="Respondido">Respondido</MenuItem>
+                        <MenuItem
+                          value="Respondido"
+                          disabled={
+                            ticket.status === "Respondido" ||
+                            ticket.status === "Visto"
+                          }
+                        >
+                          Respondido
+                        </MenuItem>
                       </Select>
                     </FormControl>
                   </TableCell>
