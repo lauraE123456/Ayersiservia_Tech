@@ -50,94 +50,55 @@ import {
   Legend,
 } from "recharts";
 
-// --- CONFIGURACIÓN ---
-// Cambia esto a TRUE cuando tengas tu backend Python corriendo en localhost:5000
-const USE_LIVE_API = false;
-
-// Respuesta simulada para cuando no hay backend (Evita el Network Error)
-const MOCK_AI_RESPONSE = `Basado en el análisis histórico, este cliente presenta un riesgo crítico de fuga (Churn) debido a la recurrencia de incidentes técnicos no resueltos en los últimos 30 días.
-
-**Factores Clave detectados:**
-1. Fatiga por tickets repetitivos sobre el mismo módulo.
-2. Tono de frustración creciente en las comunicaciones.
-3. Comparación explícita con competidores en el último correo.
-
-**Recomendación Estratégica:**
-Sugiero una intervención proactiva inmediata. No esperes al próximo ticket. Programa una sesión de "Customer Success Review" para presentar el roadmap de soluciones y ofrecer un descuento por fidelidad del 10% en la próxima renovación.`;
-
-const DEFAULT_TICKET = {
-  client_id: "CLIENT-DEMO-001",
-  project: "Proyecto Alpha",
-  client_email: "demo@cliente.com",
-  churn_score: 75,
-  churn_level: "Alto",
-  churn_color: "#f44336",
-  urgency: "Alta",
-  text_processed:
-    "El cliente indica frustración recurrente con la estabilidad del servicio en horas pico. Menciona que ha abierto 3 tickets previos sin solución definitiva.",
-};
-
 const ClientDetail = ({ ticket, onBack }) => {
-  const safeTicket = ticket || DEFAULT_TICKET;
-
-  const [urgency, setUrgency] = useState(safeTicket.urgency || "Media");
+  const [urgency, setUrgency] = useState(ticket.urgency || "Media");
   const [emailSent, setEmailSent] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState("");
   const [loadingAI, setLoadingAI] = useState(true);
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  console.log("info:", safeTicket);
+  console.log("info:", ticket);
   // --- EFECTO: ANÁLISIS AUTOMÁTICO ---
+
   useEffect(() => {
     const fetchStrategicAnalysis = async () => {
       setLoadingAI(true);
-
-      // Limpiamos cualquier error previo
-      setAiAnalysis("");
-
       try {
-        if (USE_LIVE_API) {
-          // --- MODO REAL (Backend) ---
-          const payload = {
-            message:
-              "Genera el diagnóstico y la recomendación estratégica ejecutiva para este caso.",
-            context: {
-              client_name: safeTicket.client_id,
-              churn_score: safeTicket.churn_score,
-              ticket_text: safeTicket.text_processed,
-              status: safeTicket.status,
-              project: safeTicket.project,
-              antiguedad: safeTicket.real_antiguedad,
-              urgency: safeTicket.urgency,
-            },
-          };
+        // PROMPT ESPECIALIZADO PARA ACCOUNT MANAGER
+        // Le pedimos a la IA que actúe como un consultor de negocios, no soporte técnico.
+        const payload = {
+          message:
+            "Genera el diagnóstico y la recomendación estratégica para este caso.",
+          contexto: {
+            client_name: ticket.client_id,
+            churn_score: ticket.churn_score,
+            ticket_text: ticket.text_processed,
+            status: ticket.status,
+            project: ticket.project,
+            antiguedad: ticket.real_antiguedad,
+            urgency: ticket.urgency,
+          },
+        };
 
-          const response = await axios.post(
-            "http://localhost:5000/api/chat",
-            payload
-          );
-          const replyText =
-            typeof response.data.reply === "string"
-              ? response.data.reply
-              : JSON.stringify(response.data.reply);
-          setAiAnalysis(replyText);
-        } else {
-          // --- MODO SIMULACIÓN (Sin errores de consola) ---
-          await new Promise((r) => setTimeout(r, 2000)); // Simula "pensando"
-          setAiAnalysis(MOCK_AI_RESPONSE);
-        }
+        const response = await axios.post(
+          "http://localhost:5000/api/chat",
+          payload
+        );
+        setAiAnalysis(response.data.reply);
       } catch (error) {
-        console.warn("Error en conexión IA (usando fallback):", error);
+        console.error("Error IA:", error);
         setAiAnalysis(
-          "⚠️ No se pudo conectar con el asistente estratégico. Verifica que el servidor backend esté corriendo en el puerto 5000."
+          "No se pudo generar el análisis estratégico en este momento."
         );
       } finally {
         setLoadingAI(false);
       }
     };
 
-    fetchStrategicAnalysis();
-  }, [safeTicket]);
+    if (ticket) {
+      fetchStrategicAnalysis();
+    }
+  }, [ticket]);
 
   const handleCopyAnalysis = () => {
     if (aiAnalysis) {
@@ -153,11 +114,11 @@ const ClientDetail = ({ ticket, onBack }) => {
 
   // --- DATOS GRÁFICOS ---
   const healthData = [
-    { name: "Salud", valor: 100 - safeTicket.churn_score, color: "#4caf50" },
+    { name: "Salud", valor: 100 - ticket.churn_score, color: "#4caf50" },
     {
       name: "Riesgo",
-      valor: safeTicket.churn_score,
-      color: safeTicket.churn_color || "#f44336",
+      valor: ticket.churn_score,
+      color: ticket.churn_color || "#f44336",
     },
   ];
 
@@ -189,7 +150,7 @@ const ClientDetail = ({ ticket, onBack }) => {
           p: 2,
           mb: 3,
           border: `1px solid #e0e0e0`,
-          borderLeft: `6px solid ${safeTicket.churn_color}`,
+          borderLeft: `6px solid ${ticket.churn_color}`,
           borderRadius: 2,
           display: "flex",
           justifyContent: "space-between",
@@ -199,17 +160,17 @@ const ClientDetail = ({ ticket, onBack }) => {
       >
         <Box>
           <Typography variant="h5" fontWeight="800" sx={{ color: "#2c3e50" }}>
-            {safeTicket.client_id}
+            {ticket.client_id}
           </Typography>
           <Stack direction="row" spacing={1} mt={1}>
             <Chip
-              label={`Proyecto: ${safeTicket.project}`}
+              label={`Proyecto: ${ticket.project}`}
               size="small"
               variant="outlined"
               color="primary"
             />
             <Chip
-              label={safeTicket.client_email}
+              label={ticket.client_email}
               size="small"
               variant="outlined"
               icon={<SendIcon sx={{ fontSize: 14 }} />}
@@ -220,10 +181,10 @@ const ClientDetail = ({ ticket, onBack }) => {
           <Typography
             variant="h4"
             fontWeight="900"
-            color={safeTicket.churn_color}
+            color={ticket.churn_color}
             sx={{ lineHeight: 1 }}
           >
-            {safeTicket.churn_score}%
+            {ticket.churn_score}%
           </Typography>
           <Typography
             variant="caption"
@@ -370,7 +331,7 @@ const ClientDetail = ({ ticket, onBack }) => {
                     WebkitBoxOrient: "vertical",
                   }}
                 >
-                  "{safeTicket.text_processed}"
+                  "{ticket.text_processed}"
                 </Typography>
               </Box>
             </CardContent>
@@ -493,7 +454,7 @@ const ClientDetail = ({ ticket, onBack }) => {
                         color="primary"
                         sx={{ lineHeight: 1 }}
                       >
-                        {safeTicket.real_antiguedad || 0}
+                        {ticket.real_antiguedad || 0}
                       </Typography>
                       <Typography variant="caption" display="block">
                         Años
