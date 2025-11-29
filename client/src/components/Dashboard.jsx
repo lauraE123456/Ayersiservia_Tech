@@ -285,7 +285,15 @@ const Dashboard = () => {
                           "& .MuiSelect-select": { padding: "4px 0" }, // Ajuste visual
                         }}
                       >
-                        <MenuItem value="Recibido">Recibido</MenuItem>
+                        <MenuItem
+                          value="Recibido"
+                          disabled={
+                            ticket.status === "Visto" ||
+                            ticket.status === "Respondido"
+                          }
+                        >
+                          Recibido
+                        </MenuItem>
                         <MenuItem value="Visto">Visto</MenuItem>
                         <MenuItem value="Respondido">Respondido</MenuItem>
                       </Select>
@@ -342,6 +350,9 @@ const Dashboard = () => {
                       size="small"
                       onClick={(e) => {
                         e.stopPropagation(); // evita que el click seleccione la fila
+                        if (ticket.status === "Recibido") {
+                          handleStatusChange(ticket.id, "Visto");
+                        }
                         setDialogTicket(ticket);
                       }}
                     >
